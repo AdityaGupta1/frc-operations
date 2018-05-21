@@ -166,7 +166,7 @@ h1 form {
     width: 420px;
     font-family: sans-serif;
 }
-input, select {
+select {
     font-size: 24px;
     width: 100%;
     padding: 3px;

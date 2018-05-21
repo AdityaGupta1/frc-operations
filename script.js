@@ -10,6 +10,7 @@ firebase.initializeApp(config);
 
 const db = firebase.firestore();
 db.settings({ timestampsInSnapshots: true });
+var tasks = db.collection("tasks");
 
 var taskString = "";
 
@@ -22,14 +23,18 @@ function load() {
     $("#tasks").html("Loading...");
     taskString = "";
 
-    db.collection("tasks").get().then(function(querySnapshot) {
+    tasks.get().then(function(querySnapshot) {
         querySnapshot.forEach(function(doc) {
             var task = doc.data();
             taskString += "<h3>" + task.name + " (" + task.leader + ")";
             var participants = task.participants;
 
-            if (participants.length < task.max_participants) {
+            if (participants.length < task.max_participants && task.leader !== user) {
                 taskString += "<button style='margin-left:7px;' onclick='signup(\"" + doc.id + "\")'>+</button>";
+            }
+
+            if (task.leader === user) {
+                taskString += "<button style='margin-left:7px;' onclick='removeTask(\"" + doc.id + "\")'>-</button>";
             }
 
             taskString += "</h3><table class='table-striped'>";
@@ -50,7 +55,7 @@ function load() {
 }
 
 function signup(id) {
-    var task = db.collection("tasks").doc(id);
+    var task = tasks.doc(id);
     task.get().then(function(doc) {
         var participants = doc.data().participants;
         participants.push(user);
@@ -61,7 +66,7 @@ function signup(id) {
 }
 
 function removeSignup(id) {
-    var task = db.collection("tasks").doc(id);
+    var task = tasks.doc(id);
     task.get().then(function(doc) {
         var participants = doc.data().participants;
         participants.splice(participants.indexOf(user), 1);
@@ -69,4 +74,23 @@ function removeSignup(id) {
     }).then(function() {
         load();
     });
+}
+
+function removeTask(id) {
+    tasks.doc(id).delete();
+    load();
+}
+
+function addTask() {
+    var taskName = $("#task-name").val();
+    var maxParticipants = parseInt($("#task-participants").val());
+
+    tasks.add({
+        "leader": user,
+        "max_participants": maxParticipants,
+        "name": taskName,
+        "participants": []
+    });
+
+    load();
 }
