@@ -1,16 +1,15 @@
-var config = {
+firebase.initializeApp({
     apiKey: "AIzaSyBqgAMXL5NK1q5b7tLK3mzNz1NS2ED_Ohg",
     authDomain: "frc-operations.firebaseapp.com",
     databaseURL: "https://frc-operations.firebaseio.com",
     projectId: "frc-operations",
     storageBucket: "frc-operations.appspot.com",
     messagingSenderId: "580956261000"
-};
-firebase.initializeApp(config);
+});
 
 const db = firebase.firestore();
 db.settings({ timestampsInSnapshots: true });
-var tasks = db.collection("tasks");
+const tasks = db.collection("tasks");
 
 var tasksObject = {};
 var taskString = "";
@@ -26,7 +25,7 @@ function load() {
 
     tasks.get().then(function(querySnapshot) {
         querySnapshot.forEach(function(doc) {
-            var task = doc.data();
+            let task = doc.data();
 
             tasksObject[doc.id] = {
                 "leader": task.leader,
@@ -43,11 +42,11 @@ function load() {
 function showTasks() {
     taskString = "";
 
-    for (var id in tasksObject) {
-        var task = tasksObject[id];
+    for (let id in tasksObject) {
+        let task = tasksObject[id];
 
         taskString += "<h3>" + task.name + " (" + task.leader + ")";
-        var participants = task.participants;
+        let participants = task.participants;
 
         if (participants.length < task.max_participants && task.leader !== user && task.participants.indexOf(user) === -1) {
             taskString += "<button style='margin-left:7px;' onclick='signup(\"" + id + "\")'>+</button>";
@@ -59,8 +58,8 @@ function showTasks() {
 
         taskString += "</h3><table class='table-striped'>";
 
-        for (var i in participants) {
-            var participant = participants[i];
+        for (let i in participants) {
+            let participant = participants[i];
             taskString += "<tr><td>" + participant;
             if (participant === user) {
                 taskString += "<button style='margin-left:7px;' onclick='removeSignup(\"" + id + "\")'>-</button>";
@@ -74,26 +73,24 @@ function showTasks() {
 }
 
 function signup(id) {
-    var task = tasks.doc(id);
+    let task = tasks.doc(id);
 
     task.get().then(function(doc) {
-        var participants = doc.data().participants;
+        let participants = doc.data().participants;
         participants.push(user);
-        task.update({ "participants": participants });
         tasksObject[id].participants = participants;
+        task.update({ "participants": participants });
     }).then(function() {
         showTasks();
     });
 }
 
 function removeSignup(id) {
-    var task = tasks.doc(id);
+    let task = tasks.doc(id);
 
-    task.get().then(function(doc) {
-        var participants = tasksObject[id].participants;
-        participants.splice(participants.indexOf(user), 1);
-        task.update({ "participants":  tasksObject[id].participants});
-    }).then(function() {
+    let participants = tasksObject[id].participants;
+    participants.splice(participants.indexOf(user), 1);
+    task.update({ "participants":  tasksObject[id].participants}).then(function() {
         showTasks();
     });
 }
@@ -105,10 +102,10 @@ function removeTask(id) {
 }
 
 function addTask() {
-    var taskName = $("#task-name").val();
-    var maxParticipants = parseInt($("#task-participants").val());
+    let taskName = $("#task-name").val();
+    let maxParticipants = parseInt($("#task-participants").val());
 
-    var task = {
+    let task = {
         "leader": user,
         "max_participants": maxParticipants,
         "name": taskName,
