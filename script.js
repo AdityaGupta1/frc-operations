@@ -17,6 +17,8 @@ var taskString = "";
 // will get actual signed in user once it's on wordpress
 const user = "Aditya Gupta";
 
+var editing = "";
+
 load();
 
 function load() {
@@ -44,25 +46,36 @@ function showTasks() {
 
     for (let id in tasksObject) {
         let task = tasksObject[id];
-
-        taskString += "<h3>" + task.name + " (" + task.leader + ")";
         let participants = task.participants;
 
-        if (participants.length < task.max_participants && task.leader !== user && task.participants.indexOf(user) === -1) {
-            taskString += "<button style='margin-left:7px;' onclick='signup(\"" + id + "\")'>+</button>";
+        if (editing === id) {
+            taskString += "<input id='editing-name' type='text' style='width: 50%' value='" + task.name + "'>";
+            taskString += "<button onclick='confirm()'>✔</button>";
+        } else {
+            taskString += "<h3>" + task.name + " (" + task.leader + ")";
+
+            if (task.leader === user) {
+                if (editing === "") {
+                    taskString += "<button onclick='editing = \"" + id + "\"; showTasks();'>✎</button>";
+                }
+
+                taskString += "<button onclick='removeTask(\"" + id + "\")'>×</button>";
+            }
+
+            if (participants.length < task.max_participants && task.leader !== user && task.participants.indexOf(user) === -1) {
+                taskString += "<button onclick='signup(\"" + id + "\")'>+</button>";
+            }
+
+            taskString += "</h3>";
         }
 
-        if (task.leader === user) {
-            taskString += "<button style='margin-left:7px;' onclick='removeTask(\"" + id + "\")'>-</button>";
-        }
-
-        taskString += "</h3><table class='table-striped'>";
+        taskString += "<table>";
 
         for (let i in participants) {
             let participant = participants[i];
             taskString += "<tr><td>" + participant;
             if (participant === user) {
-                taskString += "<button style='margin-left:7px;' onclick='removeSignup(\"" + id + "\")'>-</button>";
+                taskString += "<button onclick='removeSignup(\"" + id + "\")'>×</button>";
             }
             taskString += "</td></tr>";
         }
@@ -90,6 +103,7 @@ function removeSignup(id) {
 
     let participants = tasksObject[id].participants;
     participants.splice(participants.indexOf(user), 1);
+
     task.update({ "participants":  tasksObject[id].participants}).then(function() {
         showTasks();
     });
@@ -114,6 +128,19 @@ function addTask() {
 
     tasks.add(task).then(function(doc) {
         tasksObject[doc.id] = task;
+        showTasks();
+    });
+}
+
+function confirm() {
+    let task = tasks.doc(editing);
+    let newName = $("#editing-name").val();
+
+    task.get().then(function() {
+        task.update({ "name": newName });
+        tasksObject[editing].name = newName;
+    }).then(function() {
+        editing = "";
         showTasks();
     });
 }
